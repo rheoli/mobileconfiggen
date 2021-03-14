@@ -1,0 +1,41 @@
+#!/bin/sh
+
+if [ "x$7" ==  "x" ]
+then
+	echo "Usage: generate-mobileconfig <pkcs12file> <name> <ufqdn> <ondemand/normal> <server hostname> <domain> <dns> [File UUID]"
+	exit 1
+fi
+
+if [ ! -f `dirname $0`/$4.tmpl ]
+then
+	echo "Template not found"
+	exit 1
+fi
+
+if [ ! -f $pkcs12filename ]
+then
+	echo "Certificate file not found"
+	exit 1
+fi
+
+pkcs12filename=$1
+pkcs12base=`basename $pkcs12filename`
+name=$2
+uuid1=`uuidgen`
+uuid2=`uuidgen`
+uuid3=`uuidgen`
+ufqdn=$3
+server=$5
+domain=$6
+dns=$7
+
+if [ "x$8" == "x" ]
+then
+	uuidname=`uuidgen`
+else
+	uuidname=$8
+fi
+
+pkcs12data=`cat $pkcs12filename|openssl enc -base64|tr -d '\n'`
+
+cat `dirname $0`/$4.tmpl | sed -e "s|##pkcs12data##|$pkcs12data|g" | sed -e "s|##pkcs12filename##|$pkcs12base|g" | sed -e "s|##uuid1##|$uuid1|g" | sed -e "s|##uuid2##|$uuid2|g" | sed -e "s|##uuid3##|$uuid3|g" | sed -e "s|##uuidname##|$uuidname|g" | sed -e "s|##name##|$name|g" | sed -e "s|##ufqdn##|$ufqdn|g" | sed -e "s|##name##|$name|g" | sed -e "s|##domain##|$domain|g" | sed -e "s|##server##|$server|g" | sed -e "s|##dns##|$dns|g"  > $name.$uuidname.mobileconfig
